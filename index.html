@@ -9,56 +9,21 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg"
-    :class="[useDarkNavbar ? 'bg-dark' : 'bg-light']"
-    > <!-- :class="{'navbar-light bg-light': !useDarkNavbar, 'navbar-dark bg-dark': useDarkNavbar}" - if useDarkNavbar is false, apply classes: navbar-light & bg-light, when is true, apply another...-->
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">My Vue</a>
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li v-for="(page, index) in pages" class="nav-item" :key="index"> <!-- v-for: v = view directive, for = forloop --> <!-- v-on: v = view directive, on= event, short syntax @ instead of: v-on:click=""-->
-                    <a class="nav-link"
-                    :class="{active: activPage == index}"
-                    aria-current="page"
-                    :href="page.link.url" 
-                    :title="`This link goes to the ${page.link.text} page`"
-                    @click.prevent="activPage = index" 
-                    >{{page.link.text}}</a> <!-- binding linků, binding dates to atributes, short hand syntax: instead of "v-bind:href="..", .prevent, prevent event before go to url -->
-                </li>
-            </ul>
-            <form class="d-flex">
-                <button class="btn btn-primary"
-                @click.prevent="useDarkNavbar = !useDarkNavbar"
-                >Toggle
-            </button>
-            <!--when clicked, remove class useDarkNavBar -->
-            </form>
-        </div>
-    </nav>
-    <div id="content" class="container">
-        <h1>
-            {{pages[activPage].pageTitle }}
-        </h1>
-        <p>{{pages[activPage].content }}</p>
-    </div>
+    <navbar
+    :pages="pages"
+    :activ-page="activPage"
+    :nav-link-click="(index) => activPage = index"
+    ></navbar>
+
+    <page-viewer
+        :page="pages[activPage]">
+    </page-viewer>
+    
     <script>
-        Vue.createApp({
-            //computed properties:
-            computed:{
-                navbarClasses(){
-                    return {
-                        'navbar-light': !this.useDarkNavbar,
-                        'bg-light': !this.useDarkNavbar,
-                        'navbar-dark': this.useDarkNavbar,
-                        'bg-dark':this.useDarkNavbar
-                    }
-
-                }
-            },
-
+        let app = Vue.createApp({
             data() { //options, (in React: states)
                 return{
                     activPage: 0, //index of array, @click changes when clicked: activPage = index -> activPage = 0/1/2
-                    useDarkNavbar: false,
                     pages:[
                         {link:{text:"Home", url:"index.html"},
                         pageTitle: "Home page",
@@ -72,17 +37,65 @@
                         pageTitle: "Contact page",
                         content: "This is the contact content"
                         }
-                    ]
-                        
-                    
+                    ]      
+                };
+            },
+        });
+        app.component('page-viewer', {
+            props: ['page'],
+            template: `
+            <div class="container">
+                <h1>{{page.pageTitle}}</h1>
+                <p>{{page.content}}</p>
+            </div>
+            `
+        });
+        app.component('navbar',{
+            props:['pages', 'activPage', 'navLinkClick'],
+            template: `
+                <nav 
+                    :class="[\`navbar-\${theme}\`, \`bg-\${theme}\`, 'navbar', 'navbar-expand-lg']"
+                > 
+                <div class="container-fluid">
+                <a class="navbar-brand" href="#">My Vue</a>
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li v-for="(page, index) in pages" class="nav-item" :key="index">
+                        <a
+                        class="nav-link"
+                        :class="{active: activPage == index}"
+                        aria-current="page"
+                        :href="page.link.url" 
+                        :title="\`This link goes to the \${page.link.text} page\`"
+                        @click.prevent="navLinkClick(index)" 
+                        >{{page.link.text}}</a> 
+                    </li>
+                </ul>
+                <form class="d-flex">
+                    <button 
+                    class="btn btn-primary"
+                    @click.prevent="changeTheme()"
+                    >Toggle
+                </button>
+                </form>
+            </div>
+        </nav>
+            `,
+        data(){
+            return{
+                theme: 'light'
+            }
+        },
+        methods:{
+                changeTheme(){
+                    let theme = 'light';
+                    if(this.theme == 'light'){
+                        theme = 'dark';
+                    }
+                    this.theme = theme;
                 }
             }
-        }).mount("body");//mounting link into element body!
+    })
+        app.mount("body");//mounting link into element body!
     </script>
 </body>
 </html>
-
- <!-- v-for: v = view directive, for = forloop 
- v-bind:href=".." -> : binding linků, binding dates to atributes
- v-on: v = view directive, on= event -> @ instead of: v-on:click=""
- prevent, prevent event before go to url  -->
